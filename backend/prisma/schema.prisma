@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  transactions Transaction[]
+  budgets      Budget[]
+  receipts     Receipt[]
+  alerts       Alert[]
+  gamification UserGamification?
+}
+
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  type        String   // "income" or "expense"
+  category    String
+  description String?
+  date        DateTime @default(now())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  receiptId   Int?
+  receipt     Receipt? @relation(fields: [receiptId], references: [id])
+}
+
+model Budget {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  month       String   // "YYYY-MM"
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Receipt {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  photoUrl      String
+  storeName     String?
+  recognizedAmount Float
+  recognizedDate DateTime?
+  recognizedCategory String?
+  confidence    Float
+  rawOcrText    String?
+  itemsJson     String?  // JSON array of items
+  manuallyEdited Boolean @default(false)
+  createdAt     DateTime @default(now())
+  transactions  Transaction[]
+}
+
+model Alert {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  type            String   // "SPIKE", "TREND", "PATTERN"
+  category        String
+  title           String
+  description     String
+  severity        String   // "low", "medium", "high"
+  normalValue     Float
+  actualValue     Float
+  percentageDiff  Float
+  recommendations String?  // JSON array
+  notifiedEmail   Boolean  @default(false)
+  notifiedPush    Boolean  @default(false)
+  readAt          DateTime?
+  createdAt       DateTime @default(now())
+}
+
+// ========== GAMIFICATION MODELS ==========
+
+model UserGamification {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Level progression
+  level           Int      @default(1)  // 1-7 levels
+  currentXp       Int      @default(0)
+  totalXp         Int      @default(0)
+  
+  // Streak
+  currentStreak   Int      @default(0)  // Days in a row
+  maxStreak       Int      @default(0)
+  lastStreakDate  DateTime?
+  
+  // Pet system
+  petType         String   @default("egg")  // egg, chick, duck, eagle, lion, dragon, unicorn, phoenix
+  petHappiness    Int      @default(100)
+  petLastFed      DateTime @default(now())
+  
+  // Stats
+  totalAchievements Int    @default(0)
+  totalQuests     Int      @default(0)
+  guildId         Int?
+  guild           Guild?   @relation(fields: [guildId], references: [id])
+  
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  
+  achievements    UserAchievement[]
+  quests          UserQuest[]
+  xpHistory       XpHistory[]
+}
+
+model Achievement {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique
+  name            String
+  description     String
+  category        String   // "discipline", "savings", "category", "social", "feature", "temporal", "extreme"
+  icon            String   // emoji or icon name
+  xpReward        Int
+  rarity          String   @default("common")  // common, rare, epic, legendary
+  
+  createdAt       DateTime @default(now())
+  
+  users           UserAchievement[]
+}
+
+model UserAchievement {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  userGamification UserGamification @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  
+  achievementId   Int
+  achievement     Achievement @relation(fields: [achievementId], references: [id])
+  
+  unlockedAt      DateTime @default(now())
+  
+  @@unique([userId, achievementId])
+}
+
+model Quest {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique
+  name            String
+  description     String
+  type            String   // "daily", "weekly", "seasonal", "event"
+  category        String
+  icon            String
+  
+  progress        String   @default("{}")  // JSON object for different progress types
+  xpReward        Int
+  targetValue     Int      // How much to complete
+  
+  startsAt        DateTime
+  endsAt          DateTime
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  users           UserQuest[]
+}
+
+model UserQuest {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  userGamification UserGamification @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  
+  questId         Int
+  quest           Quest    @relation(fields: [questId], references: [id])
+  
+  progress        Int      @default(0)
+  completed       Boolean  @default(false)
+  completedAt     DateTime?
+  
+  @@unique([userId, questId])
+}
+
+model Leaderboard {
+  id              Int      @id @default(autoincrement())
+  type            String   @unique  // "global_xp", "monthly_savings", "streak", "scanner", "feature", "regional"
+  period          String   @default("all")  // "all", "monthly", "weekly"
+  
+  entriesJson     String   // JSON array of {userId, value, rank}
+  
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}
+
+model Guild {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  description     String?
+  leader          String
+  level           Int      @default(1)
+  totalXp         Int      @default(0)
+  memberCount     Int      @default(1)
+  maxMembers      Int      @default(50)
+  
+  icon            String   @default("🏛️")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  users           UserGamification[]
+}
+
+model XpHistory {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  userGamification UserGamification @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  
+  amount          Int
+  reason          String   // "budget_met", "streak", "achievement", "quest", "daily_bonus"
+  metadata        String?  // JSON object with additional info
+  
+  createdAt       DateTime @default(now())
+}
