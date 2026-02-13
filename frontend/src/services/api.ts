@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5002';
+// Если мы на Vercel — берем ссылку из переменных. Если дома — localhost.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 
 // Create axios instance
 const api = axios.create({
