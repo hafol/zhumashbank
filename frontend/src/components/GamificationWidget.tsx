@@ -19,7 +19,7 @@ function GamificationWidget({ isDarkMode = false }: Props) {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('/gamification/profile');
+      const response = await axios.get('/api/gamification/profile');
       const data = response.data;
       setLevel(String(data.level || 1));
       setTotalXp(String(data.totalXp || 0));
