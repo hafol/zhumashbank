@@ -66,6 +66,9 @@ export default function Dashboard() {
 
     const COLORS = ['#10b981', '#34d399', '#f87171', '#fbbf24', '#60a5fa'];
 
+    // Защита от невалидных данных для chartData
+    const safeChartData = Array.isArray(chartData) ? chartData.filter(Boolean) : [];
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header */}
@@ -163,18 +166,18 @@ export default function Dashboard() {
                     {/* Chart */}
                     <Card className="lg:col-span-1 min-h-[300px]">
                         <h4 className="font-semibold text-gray-900 mb-6">Expenses by Category</h4>
-                        {chartData.length > 0 ? (
+                        {safeChartData.length > 0 ? (
                             <div className="h-64">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RePieChart>
                                         <Pie
-                                            data={chartData}
+                                            data={safeChartData}
                                             innerRadius={60}
                                             outerRadius={80}
                                             paddingAngle={5}
                                             dataKey="value"
                                         >
-                                            {chartData.map((entry, index) => (
+                                            {safeChartData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>

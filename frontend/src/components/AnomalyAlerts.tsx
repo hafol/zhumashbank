@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, AlertCircle, TrendingUp, Zap } from 'lucide-react';
 import apiService from '../services/api';
 import { translations, Language } from '../translations';
@@ -34,6 +34,7 @@ export const AnomalyAlerts = ({ language = 'en', isDarkMode = true }: { language
   const fetchAlerts = async () => {
     try {
       const response = await apiService.getAnomalyAlerts();
+      console.log('fetchAlerts response:', response);
       setAlerts(response || []);
     } catch (err) {
       console.error('Failed to fetch alerts:', err);

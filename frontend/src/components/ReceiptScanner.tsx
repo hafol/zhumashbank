@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Upload, Camera, Check, AlertCircle } from 'lucide-react';
 import apiService from '../services/api';
 import { translations, Language } from '../translations';
@@ -82,6 +82,7 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
 
     try {
       const response = await apiService.scanReceipt(file);
+      console.log('scanReceipt response:', response);
 
       if (response.success) {
         const data = response.receipt;
@@ -89,8 +90,11 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
         setEditAmount(data.amount?.toString() || '');
         setEditCategory(data.category || 'Grocery');
         setEditDate(data.date || new Date().toISOString().split('T')[0]);
+      } else {
+        console.error('scanReceipt: response.success is false', response);
       }
     } catch (err: any) {
+      console.error('scanReceipt error:', err);
       setError(err.response?.data?.error || 'Failed to scan receipt');
     } finally {
       setLoading(false);
