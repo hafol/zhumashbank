@@ -347,7 +347,7 @@ app.get('/api/ai/advisor', authenticateToken, async (req, res) => {
             });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
         const prompt = `
         You are a smart financial advisor. Current month: Income ${income}, Expense ${expense}, Budget ${budget ? budget.amount : 'Not set'}. Categories: ${JSON.stringify(categories)}.
         Respond in ${lang === 'ru' ? 'Russian' : lang === 'kz' ? 'Kazakh' : 'English'}.
