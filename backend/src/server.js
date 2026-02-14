@@ -70,8 +70,18 @@ app.post('/api/auth/register', async (req, res) => {
             },
         });
         res.status(201).json({ message: 'User created successfully' });
+    // ... внутри app.post('/api/auth/register') ...
+
     } catch (error) {
-        res.status(400).json({ error: 'User already exists' });
+        console.error("Registration Error:", error); // Покажет ошибку в логах сервера
+
+        // Если Prisma говорит, что это дубликат (код P2002)
+        if (error.code === 'P2002') {
+            return res.status(400).json({ error: 'Пользователь с таким Email уже существует' });
+        }
+
+        // Любая другая ошибка (например, нет таблицы или поля)
+        res.status(500).json({ error: error.message });
     }
 });
 
