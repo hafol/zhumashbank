@@ -7,7 +7,7 @@ import axios from 'axios';
 // });
 
 const api = axios.create({
-    baseURL: 'https://zhumash-backend.onrender.com/api',
+    baseURL: 'https://zhumash-backend.onrender.com',
     withCredentials: true
 });
 

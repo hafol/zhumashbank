@@ -3,7 +3,7 @@ import axios from 'axios';
 // Если мы на Vercel — берем ссылку из переменных. Если дома — localhost.
 // МЫ ПИШЕМ ССЫЛКУ ПРЯМО СЮДА, ЧТОБЫ НАВЕРНЯКА!
 // const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
-const API_BASE_URL = 'https://zhumash-backend.onrender.com/api';
+const API_BASE_URL = 'https://zhumash-backend.onrender.com';
 
 // Create axios instance
 const api = axios.create({
