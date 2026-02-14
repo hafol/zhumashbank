@@ -265,28 +265,51 @@ app.post('/api/budget', authenticateToken, async (req, res) => {
     }
 });
 
-// AI File Analysis
+// --- AI File Analysis (Бронебойная версия) ---
 app.post('/api/upload-statement', authenticateToken, upload.single('file'), async (req, res) => {
+    console.log('--- START UPLOAD STATEMENT ---'); // Лог начала
+
     if (!req.file) {
+        console.error('No file uploaded');
         return res.status(400).json({ error: 'No file uploaded' });
     }
 
     try {
+        console.log('File received, size:', req.file.size);
         const dataBuffer = req.file.buffer;
-        
-        // --- НАЧАЛО ИСПРАВЛЕНИЯ ---
-        // Проверяем: если pdf - это не функция, ищем функцию внутри .default
-        let pdfParser = pdf;
-        if (typeof pdfParser !== 'function' && pdfParser.default) {
-            pdfParser = pdfParser.default;
-        }
-        
-        // Теперь вызываем правильную функцию
-        const data = await pdfParser(dataBuffer);
-        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-        const text = data.text;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        // 1. "Умный" импорт библиотеки прямо здесь
+        let pdfParser;
+        try {
+            // Пытаемся загрузить стандартным способом
+            const module = require('pdf-parse');
+            // Проверяем, функция ли это или объект
+            if (typeof module === 'function') {
+                pdfParser = module;
+            } else if (module.default && typeof module.default === 'function') {
+                pdfParser = module.default;
+            } else {
+                console.error('Strange PDF module format:', module);
+                throw new Error('PDF library loaded incorrectly');
+            }
+        } catch (libError) {
+            console.error('Library import failed:', libError);
+            throw new Error('Server misconfiguration: pdf-parse');
+        }
+
+        // 2. Парсим PDF
+        console.log('Parsing PDF...');
+        const data = await pdfParser(dataBuffer);
+        const text = data.text;
+        console.log('PDF parsed successfully. Text length:', text.length);
+
+        if (!text || text.length < 10) {
+            throw new Error('PDF seems empty or unreadable');
+        }
+
+        // 3. Отправляем в Gemini
+        console.log('Sending to Gemini...');
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" }); // Используем быструю модель
 
         const prompt = `
         Analyze the following bank statement text and extract all transactions.
@@ -302,22 +325,29 @@ app.post('/api/upload-statement', authenticateToken, upload.single('file'), asyn
         ]
         
         Bank Statement Text:
-        ${text.substring(0, 20000)}
+        ${text.substring(0, 30000)}
         `;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let textResponse = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
 
+        // Попытка очистить JSON от лишнего мусора, если он есть
+        const jsonStart = textResponse.indexOf('[');
+        const jsonEnd = textResponse.lastIndexOf(']');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+            textResponse = textResponse.substring(jsonStart, jsonEnd + 1);
+        }
+
         const transactions = JSON.parse(textResponse);
+        console.log('Gemini returned transactions:', transactions.length);
+        
         res.json({ transactions });
 
     } catch (error) {
-        console.error('AI Analysis Error:', error);
-        if (error.message.includes('quota') || error.message.includes('limit') || error.message.includes('429')) {
-            return res.status(429).json({ error: 'API quota exceeded. Please try again later.' });
-        }
-        res.status(500).json({ error: 'Failed to analyze statement' });
+        console.error('❌ CRITICAL ERROR in upload-statement:', error);
+        // Отправляем точный текст ошибки на фронтенд, чтобы видеть его в alert
+        res.status(500).json({ error: error.message || 'Failed to analyze statement' });
     }
 });
 
@@ -351,7 +381,7 @@ app.get('/api/ai/advisor', authenticateToken, async (req, res) => {
         });
 
         // Check if API key is set
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_new_api_key_here') {
+        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'AIzaSyBQZR6w_UxrUzfPClogNO-W73K7JQehS9E') {
             console.log('⚠️  GEMINI_API_KEY not configured. Using fallback advice.');
             return res.json({
                 insights: [
