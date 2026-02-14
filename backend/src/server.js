@@ -273,7 +273,17 @@ app.post('/api/upload-statement', authenticateToken, upload.single('file'), asyn
 
     try {
         const dataBuffer = req.file.buffer;
-        const data = await pdf(dataBuffer);
+        
+        // --- НАЧАЛО ИСПРАВЛЕНИЯ ---
+        // Проверяем: если pdf - это не функция, ищем функцию внутри .default
+        let pdfParser = pdf;
+        if (typeof pdfParser !== 'function' && pdfParser.default) {
+            pdfParser = pdfParser.default;
+        }
+        
+        // Теперь вызываем правильную функцию
+        const data = await pdfParser(dataBuffer);
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
         const text = data.text;
 
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
