@@ -19,6 +19,12 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
+// CORS setup for Vercel frontend with credentials
+app.use(cors({
+    origin: 'https://zhumashbankk.vercel.app',
+    credentials: true
+}));
+
 // Multer setup for file uploads (in memory for now)
 const upload = multer({ storage: multer.memoryStorage() });
 
