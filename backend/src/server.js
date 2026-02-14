@@ -5,7 +5,14 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const pdf = require('pdf-parse');
+let pdf = require('pdf-parse');
+// Если библиотека загрузилась как объект с полем default (бывает на новых Node.js), берем default
+if (typeof pdf !== 'function' && pdf.default) {
+    pdf = pdf.default;
+}
+
+// Проверка для логов (увидим в Render, если что-то не так)
+console.log('PDF Library loaded type:', typeof pdf);
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
