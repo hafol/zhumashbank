@@ -72,7 +72,7 @@ export const AnomalyAlerts = ({ language = 'en', isDarkMode = true }: { language
   if (loading) {
     return (
       <div className={`${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white'} rounded-lg shadow p-6`}>
-        <h2 className="text-xl font-bold mb-4">{t('spendingAlerts')}</h2>
+        <h2 className="text-xl font-bold mb-4">{t.spendingAlerts}</h2>
         <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Loading alerts...</div>
       </div>
     );
@@ -81,10 +81,10 @@ export const AnomalyAlerts = ({ language = 'en', isDarkMode = true }: { language
   return (
     <div className={`${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white'} rounded-lg shadow p-6`}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">{t('spendingAlerts')}</h2>
+        <h2 className="text-xl font-bold">{t.spendingAlerts}</h2>
         {alerts.some(a => !a.readAt) && (
           <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
-            {alerts.filter(a => !a.readAt).length} {t('alertsNew')}
+            {alerts.filter(a => !a.readAt).length} {t.alertsNew}
           </span>
         )}
       </div>
@@ -98,7 +98,7 @@ export const AnomalyAlerts = ({ language = 'en', isDarkMode = true }: { language
               : `border-transparent ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
           }`}
         >
-          {t('all')} ({alerts.length})
+          {t.all} ({alerts.length})
         </button>
         <button
           onClick={() => setFilter('unread')}
@@ -108,14 +108,14 @@ export const AnomalyAlerts = ({ language = 'en', isDarkMode = true }: { language
               : `border-transparent ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`
           }`}
         >
-          {t('unread')} ({alerts.filter(a => !a.readAt).length})
+          {t.unread} ({alerts.filter(a => !a.readAt).length})
         </button>
       </div>
 
       {displayAlerts.length === 0 ? (
         <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
           <Zap size={32} className="mx-auto mb-2 opacity-50" />
-          <p>{filter === 'unread' ? 'No new alerts' : t('noAlerts')}</p>
+          <p>{filter === 'unread' ? 'No new alerts' : t.noAlerts}</p>
         </div>
       ) : (
         <div className={`space-y-3 max-h-96 overflow-y-auto ${theme === 'dark' ? 'scrollbar-thin scrollbar-thumb-slate-600' : ''}`}>
@@ -155,9 +155,9 @@ export const AnomalyAlerts = ({ language = 'en', isDarkMode = true }: { language
                     </div>
                   </div>
 
-                  {alert.recommendations && alert.recommendations.length > 0 && (
+                  {Array.isArray(alert.recommendations) && alert.recommendations.length > 0 && (
                     <div className={`mt-3 pt-3 border-t border-current border-opacity-20`}>
-                      <p className={`text-xs font-semibold mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t('recommendations')}:</p>
+                      <p className={`text-xs font-semibold mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t.recommendations}:</p>
                       <ul className="text-xs space-y-1">
                         {alert.recommendations.map((rec, i) => (
                           <li key={i} className="flex gap-2">

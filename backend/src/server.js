@@ -309,13 +309,15 @@ app.post('/api/upload-statement', authenticateToken, upload.single('file'), asyn
     }
 });
 
-// --- AI ADVISOR & CHAT ROUTES ---
 
+
+// --- AI ADVISOR ROUTE ---
 app.get('/api/ai/advisor', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { lang = 'en' } = req.query;
 
     try {
+        // 1. Получаем данные из базы (Ваш оригинальный код)
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
@@ -338,67 +340,104 @@ app.get('/api/ai/advisor', authenticateToken, async (req, res) => {
             categories[t.category] = (categories[t.category] || 0) + t.amount;
         });
 
+        // 2. ПРОВЕРКА КЛЮЧА
+        // Если ключа нет — вернет демо-режим. Если ключ есть — этот блок пропустится.
         if (!process.env.GEMINI_API_KEY) {
-    console.log('⚠️ GEMINI_API_KEY not configured. Using fallback advice.');
-    return res.json({
-        insights: ['Please configure API Key'],
-        forecast: 'No API Key',
-        summary: 'Demo mode'
-    });
-}
-        
+            console.log('⚠️ GEMINI_API_KEY not configured. Using fallback advice.');
+            return res.json({
+                insights: ['Please configure API Key in .env file'],
+                forecast: 'No API Key',
+                summary: 'Demo mode'
+            });
+        }
 
+        // 3. ЗАПУСК AI С НОВЫМ КЛЮЧОМ
+        // Важно: инициализируем здесь, чтобы точно взялся новый ключ
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        // Используем актуальную модель gemini-1.5-flash
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
         const prompt = `
-        You are a smart financial advisor. Current month: Income ${income}, Expense ${expense}, Budget ${budget ? budget.amount : 'Not set'}. Categories: ${JSON.stringify(categories)}.
-        Respond in ${lang === 'ru' ? 'Russian' : lang === 'kz' ? 'Kazakh' : 'English'}.
-        Return ONLY a JSON object:
-        { "insights": ["tip1", "tip2"], "forecast": "prediction", "summary": "state" }
+            You are a smart financial advisor. 
+            Current month data: 
+            - Income: ${income}
+            - Expense: ${expense}
+            - Budget: ${budget ? budget.amount : 'Not set'}
+            - Categories: ${JSON.stringify(categories)}
+            
+            Respond in ${lang === 'ru' ? 'Russian' : lang === 'kz' ? 'Kazakh' : 'English'}.
+            
+            RETURN ONLY A JSON OBJECT (no markdown, no quotes around the block):
+            { "insights": ["tip1", "tip2", "tip3"], "forecast": "prediction", "summary": "state" }
         `;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
+        
+        // Чистим ответ от лишних символов
         let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        
         res.json(JSON.parse(text));
+
     } catch (error) {
         console.error('❌ Advisor Error Details:', error);
+        // Если ошибка API (например, опять заблокировали), вернем заглушку, чтобы сайт не упал
         res.status(200).json({
             insights: [
                 'AI Advisor is temporarily unavailable',
-                'Please ensure your Gemini API key is valid',
-                'Check your Google Cloud Console quotas'
+                'Please check your API Key',
+                error.message || 'Unknown error'
             ],
-            forecast: 'Unable to generate forecast at this time',
-            summary: 'Switch to manual mode. Configure your API key for AI features.'
+            forecast: 'Unable to generate forecast',
+            summary: 'System switched to offline mode.'
         });
     }
 });
 
+// --- AI CHAT ROUTE ---
 app.post('/api/ai/chat', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { message, history = [], lang = 'en' } = req.body;
 
     try {
+        if (!process.env.GEMINI_API_KEY) {
+            return res.json({ reply: "AI is offline (No API Key configured)." });
+        }
+
         const recentTransactions = await prisma.transaction.findMany({
             where: { userId },
             orderBy: { date: 'desc' },
             take: 20
         });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        // Инициализация AI с новым ключом
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
         const context = `
-        Context: You are a financial assistant. User's recent transactions: ${JSON.stringify(recentTransactions)}
+        Context: You are a helpful financial assistant for ZhumashBank.
+        User's recent transactions: ${JSON.stringify(recentTransactions)}
+        
         Respond in ${lang === 'ru' ? 'Russian' : lang === 'kz' ? 'Kazakh' : 'English'}.
-        Message: "${message}"
+        User Message: "${message}"
         `;
 
-        const chat = model.startChat({ history: history.slice(-6) });
+        // Создаем чат, но фильтруем историю, чтобы не было ошибок формата
+        const chat = model.startChat({
+            history: history.map(h => ({
+                role: h.role === 'ai' ? 'model' : 'user', // Gemini требует роль 'model', а не 'ai'
+                parts: [{ text: h.content || h.parts?.[0]?.text || "" }]
+            })).slice(-10) // Берем последние 10 сообщений
+        });
+
         const result = await chat.sendMessage(context);
         const response = await result.response;
+        
         res.json({ reply: response.text() });
+
     } catch (error) {
         console.error('Chat Error:', error);
-        res.status(500).json({ error: 'Chat unavailable' });
+        res.status(500).json({ reply: "Sorry, I am having trouble connecting to the AI right now." });
     }
 });
 

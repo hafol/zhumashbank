@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Upload, Camera, Check, AlertCircle } from 'lucide-react';
 import apiService from '../services/api';
 import { translations, Language } from '../translations';
@@ -127,17 +127,17 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
   if (receipt) {
     return (
       <div className={`${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white'} rounded-lg shadow p-6 max-w-2xl`}>
-        <h2 className="text-xl font-bold mb-4">{t('confirm')}</h2>
+        <h2 className="text-xl font-bold mb-4">{t.confirm}</h2>
 
         <div className={`mb-4 p-3 rounded ${theme === 'dark' ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50'}`}>
           <p className="text-sm">
-            {t('confidence')}: <span className="font-bold">{(receipt.confidence * 100).toFixed(0)}%</span>
+            {t.confidence}: <span className="font-bold">{(receipt.confidence * 100).toFixed(0)}%</span>
           </p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t('storeName')}</label>
+            <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t.storeName}</label>
             <input
               type="text"
               value={receipt.storeName || ''}
@@ -148,7 +148,7 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t('receiptAmount')}</label>
+              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t.receiptAmount}</label>
               <input
                 type="number"
                 step="0.01"
@@ -158,7 +158,7 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t('receiptDate')}</label>
+              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t.receiptDate}</label>
               <input
                 type="date"
                 value={editDate}
@@ -169,7 +169,7 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
           </div>
 
           <div>
-            <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t('receiptCategory')}</label>
+            <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t.receiptCategory}</label>
             <select
               value={editCategory}
               onChange={(e) => setEditCategory(e.target.value)}
@@ -181,9 +181,9 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
             </select>
           </div>
 
-          {receipt.items && (
+          {Array.isArray(receipt.items) && receipt.items.length > 0 && (
             <div>
-              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t('receiptItems')}</label>
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : ''}`}>{t.receiptItems}</label>
               <div className={`p-3 rounded text-sm max-h-40 overflow-y-auto ${theme === 'dark' ? 'bg-slate-700 border border-slate-600' : 'bg-gray-50'}`}>
                 {receipt.items.map((item, i) => (
                   <div key={i} className={`flex justify-between py-1 ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'} border-b last:border-b-0`}>
@@ -201,14 +201,14 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
             onClick={() => setReceipt(null)}
             className={`flex-1 px-4 py-2 border rounded ${theme === 'dark' ? 'border-slate-600 hover:bg-slate-700 text-white' : 'border-gray-300 hover:bg-gray-50'}`}
           >
-            {t('cancel')}
+            {t.cancel}
           </button>
           <button
             onClick={confirmReceipt}
             disabled={loading}
             className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            <Check size={18} /> {t('confirm')}
+            <Check size={18} /> {t.confirm}
           </button>
         </div>
       </div>
@@ -217,7 +217,7 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
 
   return (
     <div className={`${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white'} rounded-lg shadow p-6 max-w-2xl`}>
-      <h2 className="text-xl font-bold mb-4">{t('receipts')}</h2>
+      <h2 className="text-xl font-bold mb-4">{t.receipts}</h2>
 
       {error && (
         <div className={`mb-4 p-3 rounded flex gap-2 ${theme === 'dark' ? 'bg-red-900/30 text-red-300 border border-red-700' : 'bg-red-50 text-red-700'}`}>
@@ -242,13 +242,13 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
               disabled={loading}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              📸 {t('takePhoto')}
+              📸 {t.takePhoto}
             </button>
             <button
               onClick={stopCamera}
               className={`flex-1 px-4 py-2 border rounded ${theme === 'dark' ? 'border-slate-600 hover:bg-slate-700 text-white' : 'border-gray-300 hover:bg-gray-50'}`}
             >
-              ✕ {t('cancel')}
+              ✕ {t.cancel}
             </button>
           </div>
         </div>
@@ -259,14 +259,14 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
               onClick={startCamera}
               className={`px-4 py-3 border-2 rounded flex items-center justify-center gap-2 ${theme === 'dark' ? 'border-blue-600 text-blue-400 hover:bg-blue-900/20' : 'border-blue-600 text-blue-600 hover:bg-blue-50'}`}
             >
-              <Camera size={20} /> {t('takePhoto')}
+              <Camera size={20} /> {t.takePhoto}
             </button>
 
             <button
               onClick={() => fileInputRef.current?.click()}
               className={`px-4 py-3 border-2 rounded flex items-center justify-center gap-2 ${theme === 'dark' ? 'border-slate-600 text-gray-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
             >
-              <Upload size={20} /> {t('upload')}
+              <Upload size={20} /> {t.upload}
             </button>
           </div>
 
@@ -281,7 +281,7 @@ export const ReceiptScanner = ({ language = 'en', isDarkMode = true }: { languag
           {loading && (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{t('scanning')}</p>
+              <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{t.scanning}</p>
             </div>
           )}
         </div>

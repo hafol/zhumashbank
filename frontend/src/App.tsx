@@ -385,7 +385,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ type, onSubmit, onClo
                     <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all appearance-none bg-white dark:bg-slate-700"
+                        className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all appearance-none bg-white"
                         required
                     >
                         <option value="">{t.selectCategory}</option>

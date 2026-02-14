@@ -23,6 +23,14 @@ export default function Dashboard() {
         fetchChartData();
     }, []);
 
+    useEffect(() => {
+        console.log('Dashboard data:', data);
+    }, [data]);
+
+    useEffect(() => {
+        console.log('Dashboard chartData:', chartData);
+    }, [chartData]);
+
     const fetchData = async () => {
         try {
             const res = await api.get('/dashboard');
