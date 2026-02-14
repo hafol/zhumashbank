@@ -338,18 +338,15 @@ app.get('/api/ai/advisor', authenticateToken, async (req, res) => {
             categories[t.category] = (categories[t.category] || 0) + t.amount;
         });
 
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'AIzaSyBQZR6w_UxrUzfPClogNO-W73K7JQehS9E') {
-            console.log('⚠️  GEMINI_API_KEY not configured. Using fallback advice.');
-            return res.json({
-                insights: [
-                    `Your monthly income is ${income.toFixed(2)}`,
-                    `Your monthly expense is ${expense.toFixed(2)}`,
-                    'Please update your GEMINI_API_KEY in .env to get AI recommendations'
-                ],
-                forecast: 'Please configure API key for predictions',
-                summary: 'System is in demo mode. Configure Gemini API key for full features.'
-            });
-        }
+        if (!process.env.GEMINI_API_KEY) {
+    console.log('⚠️ GEMINI_API_KEY not configured. Using fallback advice.');
+    return res.json({
+        insights: ['Please configure API Key'],
+        forecast: 'No API Key',
+        summary: 'Demo mode'
+    });
+}
+        
 
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
         const prompt = `
