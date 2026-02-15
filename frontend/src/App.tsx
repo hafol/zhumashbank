@@ -22,6 +22,7 @@ import {
     MessageCircle,
     Send,
     Bot,
+    Menu,
     Loader2,
     LayoutDashboard,
     Receipt,
@@ -516,6 +517,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [aiTransactions, setAiTransactions] = useState<any[]>([]);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [isGamificationOpen, setIsGamificationOpen] = useState(false);
+    
+    // --- НОВОЕ СОСТОЯНИЕ ДЛЯ МОБИЛЬНОГО МЕНЮ ---
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleSendMessage = async (msg: string) => {
         setChatMessages(prev => [...prev, { role: 'user', content: msg }]);
@@ -579,23 +583,27 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (!data) return <div className="min-h-screen flex items-center justify-center dark:bg-slate-900">Loading...</div>;
     const remainingBudget = (data.budget || 0) - (data.expense || 0);
 
+    const tabs = [
+        { id: 'dashboard', label: t.dashboard, icon: LayoutDashboard },
+        { id: 'investments', label: t.investments, icon: TrendingUp },
+        { id: 'simulator', label: t.simulator || 'Simulator', icon: Sparkles },
+        { id: 'receipts', label: t.receipts, icon: Receipt },
+        { id: 'alerts', label: t.alerts, icon: AlertTriangle }
+    ];
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
             <header className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl"><Wallet className="h-5 w-5 text-white" /></div>
+                        {/* Показываем название активной вкладки */}
                         <span className="font-semibold dark:text-white capitalize">{activeTab}</span>
                     </div>
 
+                    {/* --- DESKTOP NAV (Скрыто на мобильных) --- */}
                     <nav className="hidden md:flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 p-1 rounded-2xl border dark:border-slate-700/50">
-                        {[
-                            { id: 'dashboard', label: t.dashboard, icon: LayoutDashboard },
-                            { id: 'investments', label: t.investments, icon: TrendingUp },
-                            { id: 'simulator', label: t.simulator || 'Simulator', icon: Sparkles },
-                            { id: 'receipts', label: t.receipts, icon: Receipt },
-                            { id: 'alerts', label: t.alerts, icon: AlertTriangle }
-                        ].map(tab => (
+                        {tabs.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
@@ -612,11 +620,47 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </nav>
 
                     <div className="flex items-center gap-2">
+                        {/* Кнопки действий */}
                         <button onClick={() => setIsUploadModalOpen(true)} className="p-2 text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><Upload className="h-5 w-5" /></button>
                         <button onClick={() => setShowSettingsModal(true)} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><Settings className="h-5 w-5" /></button>
                         <button onClick={onLogout} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><LogOut className="h-5 w-5" /></button>
+                        
+                        {/* --- МОБИЛЬНАЯ КНОПКА МЕНЮ (БУРГЕР) --- */}
+                        {/* Видна ТОЛЬКО на мобильных (md:hidden) */}
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                            className="md:hidden p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border dark:border-slate-600 ml-1"
+                        >
+                            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        </button>
                     </div>
                 </div>
+
+                {/* --- МОБИЛЬНОЕ ВЫПАДАЮЩЕЕ МЕНЮ --- */}
+                {isMobileMenuOpen && (
+                    <div className="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-slate-800 border-b border-t dark:border-slate-700 shadow-xl z-50 animate-in slide-in-from-top-2">
+                        <div className="p-4 grid gap-2">
+                             {tabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                        setActiveTab(tab.id as any);
+                                        setIsMobileMenuOpen(false); // Закрыть меню после выбора
+                                    }}
+                                    className={cn(
+                                        "w-full flex items-center gap-3 p-4 rounded-xl transition-all",
+                                        activeTab === tab.id
+                                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-bold"
+                                            : "hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                                    )}
+                                >
+                                    <tab.icon size={20} />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-8">
