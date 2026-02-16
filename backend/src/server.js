@@ -95,7 +95,7 @@ app.post('/api/auth/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
 
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
         res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
     } catch (error) {
         res.status(500).json({ error: 'Login failed' });
