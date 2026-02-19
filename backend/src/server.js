@@ -412,7 +412,7 @@ app.post('/api/ai/chat', authenticateToken, async (req, res) => {
 
         // Инициализация AI с новым ключом
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         const context = `
         Context: You are a helpful financial assistant for ZhumashBank.
