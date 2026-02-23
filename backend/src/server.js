@@ -11,6 +11,7 @@ const path = require('path');
 const Tesseract = require('tesseract.js');
 const sharp = require('sharp');
 const gamification = require('./gamification');
+const loansRoutes = require('./routes/loans');
 
 dotenv.config();
 
@@ -101,6 +102,9 @@ app.post('/api/auth/login', async (req, res) => {
         res.status(500).json({ error: 'Login failed' });
     }
 });
+
+// --- LOANS ROUTES ---
+app.use('/api/loans', authenticateToken, loansRoutes);
 
 // --- DASHBOARD ROUTES ---
 
@@ -207,9 +211,9 @@ app.post('/api/transactions', authenticateToken, async (req, res) => {
 
         if (type === 'expense') {
             const xpAmount = Math.min(Math.floor(amount / 100), 50);
-            await gamification.addXp(userId, xpAmount, 'expense_logged', { 
-                category, 
-                amount 
+            await gamification.addXp(userId, xpAmount, 'expense_logged', {
+                category,
+                amount
             });
             await gamification.checkAndUnlockAchievements(userId);
         }
@@ -250,7 +254,7 @@ app.post('/api/upload-statement', authenticateToken, upload.single('file'), asyn
         }
 
         console.log('📄 Получен файл:', req.file.originalname, 'Размер:', req.file.size);
-        
+
         const mimeType = req.file.mimetype;
         const isPdf = mimeType === 'application/pdf';
         const isImage = mimeType.startsWith('image/');
@@ -302,9 +306,9 @@ app.post('/api/upload-statement', authenticateToken, upload.single('file'), asyn
 
     } catch (error) {
         console.error('❌ Ошибка анализа файла:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Ошибка обработки файла нейросетью. Попробуйте скриншот или другой PDF.',
-            details: error.message 
+            details: error.message
         });
     }
 });
@@ -373,10 +377,10 @@ app.get('/api/ai/advisor', authenticateToken, async (req, res) => {
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        
+
         // Чистим ответ от лишних символов
         let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-        
+
         res.json(JSON.parse(text));
 
     } catch (error) {
@@ -432,7 +436,7 @@ app.post('/api/ai/chat', authenticateToken, async (req, res) => {
 
         const result = await chat.sendMessage(context);
         const response = await result.response;
-        
+
         res.json({ reply: response.text() });
 
     } catch (error) {
@@ -567,17 +571,17 @@ app.post('/api/receipts/scan', authenticateToken, upload.single('image'), async 
 
     try {
         const userId = req.user.userId;
-        
+
         const buffer = await sharp(req.file.buffer)
             .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
             .toBuffer();
-        
+
         const ocrResult = await Tesseract.recognize(buffer, 'eng+rus+kaz', {
             logger: m => console.log('OCR Progress:', m.progress)
         });
-        
+
         const ocrText = ocrResult.data.text;
-        
+
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
         const prompt = `
         This is an OCR text from a receipt or invoice. Extract the following information.
@@ -597,10 +601,10 @@ app.post('/api/receipts/scan', authenticateToken, upload.single('image'), async 
           ] or null
         }
         `;
-        
+
         const geminiResult = await model.generateContent(prompt);
         const geminiText = geminiResult.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-        
+
         let parsedData;
         try {
             parsedData = JSON.parse(geminiText);
@@ -609,7 +613,7 @@ app.post('/api/receipts/scan', authenticateToken, upload.single('image'), async 
                 storeName: null, total_amount: 0, date: null, category: 'Other', confidence: 0.5, items: null
             };
         }
-        
+
         const receipt = await prisma.receipt.create({
             data: {
                 userId,
@@ -631,16 +635,16 @@ app.post('/api/receipts/scan', authenticateToken, upload.single('image'), async 
 
         await gamification.unlockAchievement(userId, 'first_receipt');
         await gamification.checkAndUnlockAchievements(userId);
-        
+
         res.json({
             success: true,
             receipt: {
-                id: receipt.id, storeName: parsedData.storeName, amount: parsedData.total_amount, 
-                date: parsedData.date, category: parsedData.category, confidence: parsedData.confidence, 
+                id: receipt.id, storeName: parsedData.storeName, amount: parsedData.total_amount,
+                date: parsedData.date, category: parsedData.category, confidence: parsedData.confidence,
                 items: parsedData.items
             }
         });
-        
+
     } catch (error) {
         console.error('Receipt Scan Error:', error);
         res.status(500).json({ error: 'Failed to scan receipt' });
@@ -652,13 +656,13 @@ app.post('/api/receipts/:receiptId/confirm', authenticateToken, async (req, res)
         const { receiptId } = req.params;
         const { amount, category, date, description } = req.body;
         const userId = req.user.userId;
-        
+
         const receipt = await prisma.receipt.findUnique({ where: { id: parseInt(receiptId) } });
-        
+
         if (!receipt || receipt.userId !== userId) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
-        
+
         const transaction = await prisma.transaction.create({
             data: {
                 userId, amount: parseFloat(amount), type: 'expense', category,
@@ -666,13 +670,13 @@ app.post('/api/receipts/:receiptId/confirm', authenticateToken, async (req, res)
                 date: new Date(date), receiptId: parseInt(receiptId)
             }
         });
-        
+
         if (amount !== receipt.recognizedAmount || category !== receipt.recognizedCategory) {
             await prisma.receipt.update({
                 where: { id: parseInt(receiptId) }, data: { manuallyEdited: true }
             });
         }
-        
+
         res.json({ success: true, transactionId: transaction.id });
     } catch (error) {
         console.error('Receipt Confirm Error:', error);
@@ -686,7 +690,7 @@ app.get('/api/receipts', authenticateToken, async (req, res) => {
         const receipts = await prisma.receipt.findMany({
             where: { userId }, orderBy: { createdAt: 'desc' }, take: 50
         });
-        
+
         res.json(receipts.map(r => ({ ...r, items: r.itemsJson ? JSON.parse(r.itemsJson) : null })));
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch receipts' });
@@ -699,31 +703,31 @@ app.post('/api/anomalies/check', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
         const { transactionId } = req.body;
-        
+
         const transaction = await prisma.transaction.findUnique({ where: { id: parseInt(transactionId) } });
-        
+
         if (!transaction || transaction.userId !== userId) return res.status(403).json({ error: 'Unauthorized' });
-        
+
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
+
         const history = await prisma.transaction.findMany({
             where: { userId, category: transaction.category, date: { gte: thirtyDaysAgo }, id: { not: transaction.id } }
         });
-        
+
         if (history.length < 3) return res.json({ anomaly: false, reason: 'Not enough history' });
-        
+
         const amounts = history.map(t => t.amount);
         const mean = amounts.reduce((a, b) => a + b) / amounts.length;
         const variance = amounts.reduce((a, b) => a + Math.pow(b - mean, 2)) / amounts.length;
         const stdDev = Math.sqrt(variance);
-        
+
         const zScore = (transaction.amount - mean) / stdDev;
         const isAnomaly = Math.abs(zScore) > 2;
-        
+
         if (isAnomaly) {
             const percentageDiff = ((transaction.amount - mean) / mean * 100).toFixed(0);
-            
+
             const alert = await prisma.alert.create({
                 data: {
                     userId, type: 'SPIKE', category: transaction.category,

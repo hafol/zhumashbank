@@ -99,6 +99,24 @@ export const translations = {
         actualValue: 'Actual Value',
         recommendations: 'Recommendations',
         alertsNew: 'new',
+
+        // Loans
+        loans: 'Loans',
+        addLoan: 'Add Loan',
+        loanReason: 'Reason for loan',
+        loanReasonPlaceholder: 'e.g. For business expanding',
+        loanAmount: 'Loan Amount',
+        interestRate: 'Interest Rate (%)',
+        termMonths: 'Term (months)',
+        monthlyPayment: 'Monthly Payment',
+        aiEvaluation: 'AI Evaluation',
+        goodReason: 'Good Reason',
+        badReason: 'Bad Reason',
+        evaluating: 'Evaluating...',
+        dailyMotivation: 'Daily Motivation',
+        payoffProgress: 'Payoff Progress',
+        whatIf: 'What-if Simulator',
+        noLoans: 'No loans yet, add one to get started!',
     },
     ru: {
         // Auth
@@ -198,6 +216,24 @@ export const translations = {
         actualValue: 'Фактическое значение',
         recommendations: 'Рекомендации',
         alertsNew: 'новых',
+
+        // Loans
+        loans: 'Кредиты',
+        addLoan: 'Добавить кредит',
+        loanReason: 'Зачем берете кредит?',
+        loanReasonPlaceholder: 'напр. Для развития бизнеса',
+        loanAmount: 'Сумма кредита',
+        interestRate: 'Ставка (%)',
+        termMonths: 'Срок (мес)',
+        monthlyPayment: 'Ежемесячный платеж',
+        aiEvaluation: 'Оценка ИИ',
+        goodReason: 'Одобрено ИИ',
+        badReason: 'Рискованно',
+        evaluating: 'Анализируем причину...',
+        dailyMotivation: 'Мотивация дня',
+        payoffProgress: 'Прогресс выплат',
+        whatIf: 'Досрочное погашение',
+        noLoans: 'У вас нет кредитов. Добавьте первый!',
     },
     kz: {
         // Auth
@@ -297,5 +333,23 @@ export const translations = {
         actualValue: 'Іс жүзінде мән',
         recommendations: 'Ұсындар',
         alertsNew: 'жаңа',
+
+        // Loans
+        loans: 'Кредиттер',
+        addLoan: 'Кредит қосу',
+        loanReason: 'Кредит не үшін қажет?',
+        loanReasonPlaceholder: 'мыс. Бизнесті дамытуға',
+        loanAmount: 'Кредит сомасы',
+        interestRate: 'Пайыздық мөлшерлеме (%)',
+        termMonths: 'Мерзімі (ай)',
+        monthlyPayment: 'Айлық төлем',
+        aiEvaluation: 'ИИ бағалауы',
+        goodReason: 'ИИ құптады',
+        badReason: 'Тәуекелді',
+        evaluating: 'Себепті талдаудамыз...',
+        dailyMotivation: 'Күн мотивациясы',
+        payoffProgress: 'Төлем прогресі',
+        whatIf: 'Мерзімінен бұрын өтеу',
+        noLoans: 'Сiзде кредиттер жоқ. Біріншісін қосыңыз!',
     },
 };

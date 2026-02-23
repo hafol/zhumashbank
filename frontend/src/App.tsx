@@ -28,7 +28,8 @@ import {
     Receipt,
     AlertTriangle,
     Eye,
-    EyeOff
+    EyeOff,
+    CreditCard
 } from 'lucide-react';
 import { translations, Language } from './translations';
 import { cn } from './utils/cn';
@@ -39,6 +40,8 @@ import { ReceiptScanner } from './components/ReceiptScanner';
 import { AnomalyAlerts } from './components/AnomalyAlerts';
 import GamificationWidget from './components/GamificationWidget';
 import GamificationProfile from './components/GamificationProfile';
+import { Loans } from './pages/Loans';
+import { RippleLoader } from './components/RippleLoader';
 
 // --- CURRENCY CONFIGURATION ---
 type CurrencyCode = 'USD' | 'KZT' | 'CNY';
@@ -419,7 +422,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ type, onSubmit, onClo
 
 // AI Components
 const AIAdvisor: React.FC<{ advice: any; loading: boolean; error: string | null; onRetry: () => void; t: any }> = ({ advice, loading, error, onRetry, t }) => {
-    if (loading) return <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 mb-8 animate-pulse text-center"><Loader2 className="h-8 w-8 text-emerald-500 animate-spin mx-auto mb-3" /><p className="text-slate-500">Thinking...</p></div>;
+    if (loading) return <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 mb-8 flex flex-col items-center justify-center min-h-[200px]"><RippleLoader /><p className="text-slate-500 mt-6 dark:text-slate-400">Thinking...</p></div>;
     if (error) return <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-6 mb-8 flex items-center justify-between"><div className="flex items-center gap-3 text-red-600 dark:text-red-400"><X className="h-5 w-5" /><span className="text-sm font-medium">{error}</span></div><button onClick={onRetry} className="text-xs font-bold uppercase tracking-wider bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-red-100 dark:border-red-900/30">Retry</button></div>;
     if (!advice) return <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 mb-8 text-center text-slate-500"><p className="mb-4">{t.noAdvisorData}</p><button onClick={onRetry} className="text-xs font-bold uppercase tracking-wider bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700">Check insights</button></div>;
 
@@ -494,8 +497,8 @@ interface DashboardProps {
     loadingAdvice: boolean;
     adviceError: string | null;
     fetchAIAdvice: () => void;
-    activeTab: 'dashboard' | 'investments' | 'simulator' | 'receipts' | 'alerts';
-    setActiveTab: (tab: 'dashboard' | 'investments' | 'simulator' | 'receipts' | 'alerts') => void;
+    activeTab: 'dashboard' | 'investments' | 'simulator' | 'receipts' | 'alerts' | 'loans';
+    setActiveTab: (tab: 'dashboard' | 'investments' | 'simulator' | 'receipts' | 'alerts' | 'loans') => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -517,7 +520,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [aiTransactions, setAiTransactions] = useState<any[]>([]);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [isGamificationOpen, setIsGamificationOpen] = useState(false);
-    
+
     // --- НОВОЕ СОСТОЯНИЕ ДЛЯ МОБИЛЬНОГО МЕНЮ ---
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -580,13 +583,14 @@ const Dashboard: React.FC<DashboardProps> = ({
         try { await apiService.setBudget(budgetValue); refreshData(); setShowBudgetModal(false); setBudgetInput(''); } catch (error) { alert('Failed.'); }
     };
 
-    if (!data) return <div className="min-h-screen flex items-center justify-center dark:bg-slate-900">Loading...</div>;
+    if (!data) return <div className="min-h-screen flex flex-col items-center justify-center dark:bg-slate-900"><RippleLoader /><p className="text-slate-500 mt-6 font-medium dark:text-slate-400">Loading your finances...</p></div>;
     const remainingBudget = (data.budget || 0) - (data.expense || 0);
 
     const tabs = [
         { id: 'dashboard', label: t.dashboard, icon: LayoutDashboard },
         { id: 'investments', label: t.investments, icon: TrendingUp },
         { id: 'simulator', label: t.simulator || 'Simulator', icon: Sparkles },
+        { id: 'loans', label: t.loans || 'Loans', icon: CreditCard },
         { id: 'receipts', label: t.receipts, icon: Receipt },
         { id: 'alerts', label: t.alerts, icon: AlertTriangle }
     ];
@@ -624,11 +628,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <button onClick={() => setIsUploadModalOpen(true)} className="p-2 text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><Upload className="h-5 w-5" /></button>
                         <button onClick={() => setShowSettingsModal(true)} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><Settings className="h-5 w-5" /></button>
                         <button onClick={onLogout} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><LogOut className="h-5 w-5" /></button>
-                        
+
                         {/* --- МОБИЛЬНАЯ КНОПКА МЕНЮ (БУРГЕР) --- */}
                         {/* Видна ТОЛЬКО на мобильных (md:hidden) */}
-                        <button 
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                        <button
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             className="md:hidden p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border dark:border-slate-600 ml-1"
                         >
                             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -640,7 +644,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {isMobileMenuOpen && (
                     <div className="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-slate-800 border-b border-t dark:border-slate-700 shadow-xl z-50 animate-in slide-in-from-top-2">
                         <div className="p-4 grid gap-2">
-                             {tabs.map(tab => (
+                            {tabs.map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => {
@@ -669,23 +673,23 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <AIAdvisor advice={advice} loading={loadingAdvice} error={adviceError} onRetry={fetchAIAdvice} t={t} />
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border dark:border-slate-700">
-                                    <h3 className="text-slate-500 text-sm font-medium mb-1">{t.balance}</h3>
-                                    <p className="text-3xl font-bold dark:text-white">{formatCurrency(data.balance, currency)}</p>
-                                </div>
-                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border dark:border-slate-700">
-                                    <h3 className="text-slate-500 text-sm font-medium mb-1">{t.totalIncome}</h3>
-                                    <p className="text-3xl font-bold text-emerald-600">{formatCurrency(data.income, currency)}</p>
-                                </div>
-                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border dark:border-slate-700">
-                                    <h3 className="text-slate-500 text-sm font-medium mb-1">{t.totalExpense}</h3>
-                                    <p className="text-3xl font-bold text-rose-600">{formatCurrency(data.expense, currency)}</p>
-                                </div>
+                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border dark:border-slate-700">
+                                <h3 className="text-slate-500 text-sm font-medium mb-1">{t.balance}</h3>
+                                <p className="text-3xl font-bold dark:text-white">{formatCurrency(data.balance, currency)}</p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border dark:border-slate-700">
+                                <h3 className="text-slate-500 text-sm font-medium mb-1">{t.totalIncome}</h3>
+                                <p className="text-3xl font-bold text-emerald-600">{formatCurrency(data.income, currency)}</p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border dark:border-slate-700">
+                                <h3 className="text-slate-500 text-sm font-medium mb-1">{t.totalExpense}</h3>
+                                <p className="text-3xl font-bold text-rose-600">{formatCurrency(data.expense, currency)}</p>
+                            </div>
                         </div>
 
                         {/* Gamification Widget */}
                         <div className="mb-8 cursor-pointer" onClick={() => setIsGamificationOpen(true)}>
-                            <GamificationWidget 
+                            <GamificationWidget
                                 isDarkMode={isDarkMode}
                             />
                         </div>
@@ -745,6 +749,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <InvestmentAdvisor language={language} currency={currency} isDarkMode={isDarkMode} />
                 ) : activeTab === 'simulator' ? (
                     <WhatIfSimulator language={language} currency={currency} isDarkMode={isDarkMode} />
+                ) : activeTab === 'loans' ? (
+                    <Loans language={language} token={localStorage.getItem('token')} />
                 ) : activeTab === 'receipts' ? (
                     <div className="max-w-2xl"><ReceiptScanner language={language} isDarkMode={isDarkMode} /></div>
                 ) : (
@@ -753,7 +759,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </main>
 
             {/* Gamification Modal */}
-            <GamificationProfile 
+            <GamificationProfile
                 isOpen={isGamificationOpen}
                 onClose={() => setIsGamificationOpen(false)}
                 language={language}
@@ -870,7 +876,7 @@ const App: React.FC = () => {
     const [advice, setAdvice] = useState<any>(null);
     const [loadingAdvice, setLoadingAdvice] = useState(false);
     const [adviceError, setAdviceError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'investments' | 'simulator' | 'receipts' | 'alerts'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'investments' | 'simulator' | 'receipts' | 'alerts' | 'loans'>('dashboard');
 
     const loadDashboard = async () => {
         try { const data = await apiService.getDashboard(); setDashboardData(data); }
@@ -906,7 +912,7 @@ const App: React.FC = () => {
 export default App;
 
 export interface User {
-  id: number;
-  name: string;
-  email: string;
+    id: number;
+    name: string;
+    email: string;
 }
